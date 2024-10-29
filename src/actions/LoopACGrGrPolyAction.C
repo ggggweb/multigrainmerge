@@ -14,12 +14,13 @@ LoopACGrGrPolyAction::validParams()
   params.addClassDescription("Set up ACGrGrPoly kernels for all dofs");
   params.addRequiredParam<unsigned int>("op_num", "specifies the total number of grains to create");
   params.addRequiredParam<std::string>("var_name_base", "specifies the base name of the variables");
-  params.addRequiredParam<std::string>("liquid", "argument of mobility");
+  //params.addRequiredParam<std::string>("liquid", "argument of mobility");
   //params.addRequiredParam<std::string>("c", "concentration");
   params.addParam<bool>("variable_mobility", true, "The mobility is a function of any MOOSE variable");
   params.addCoupledVar("args", "Vector of nonlinear variable arguments that L depends on");
   params.deprecateCoupledVar("args", "coupled_variables", "02/27/2024");
 ////  params.addRequiredCoupledVar("liquid", "the liquid around the multigrain");
+  params.addRequiredParam<std::vector<VariableName>>("liquid", "The name of the diffusion variable");
 
   return params;
 }
@@ -30,7 +31,7 @@ LoopACGrGrPolyAction::LoopACGrGrPolyAction(const InputParameters & params)
     _op_num(getParam<unsigned int>("op_num")),
     _var_name_base(getParam<std::string>("var_name_base"))
     //,_liquid(getParam<std::string>("liquid"))
-    ,_liquid(getParam<std::string>("liquid"))
+    //,_liquid(getParam<std::string>("liquid"))
     //,_c(getParam<std::string>("c"))
 {
 }
@@ -38,6 +39,7 @@ LoopACGrGrPolyAction::LoopACGrGrPolyAction(const InputParameters & params)
 void
 LoopACGrGrPolyAction::act()
 {
+  std::vector<VariableName> _liquid = getParam<std::vector<VariableName>>("liquid");
   for (unsigned int op = 0; op < _op_num; ++op)
   {
      std::string var_name = _var_name_base + Moose::stringify(op);   //gr0 gr1 ...
@@ -57,7 +59,8 @@ LoopACGrGrPolyAction::act()
       params.set<NonlinearVariableName>("variable") = var_name;        //kernel var
       params.set<std::vector<VariableName>>("v") = v;                  //coupled var  to v
       //params.set<std::vector<VariableName>>("rho") = _liquid;           //coupled with CH op
-      params.set<NonlinearVariableName>("rho") = "rho";
+      //params.set<NonlinearVariableName>("rho") = "rho";
+      params.set<std::vector<VariableName>>("rho") = _liquid;
       
       params.applyParameters(parameters());
 
